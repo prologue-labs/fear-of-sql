@@ -1,0 +1,89 @@
+[project]
+name = "fear-of-sql"
+version = "0.1.0"
+description = "Don't fear the SQL"
+license = "MIT"
+readme = "README.md"
+authors = [
+    { name = "Sean Moon", email = "sean@prologue-labs.com" }
+]
+requires-python = ">=3.10"
+dependencies = ["pg8000>=1.29", "asyncpg>=0.27"]
+
+[project.optional-dependencies]
+psycopg = ["psycopg>=3.1"]
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "asyncpg>=0.31.0",
+    "coverage[toml]>=7.6",
+    "mypy>=1.15",
+    "psycopg>=3.3.3",
+    "pydantic>=2.12.0",
+    "pytest>=9.0",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.11",
+]
+
+[tool.pytest.ini_options]
+strict_markers = true
+strict_config = true
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["fear_of_sql"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 100
+exclude_also = [
+    "if TYPE_CHECKING:",
+    ': \.\.\.$',
+    'if sys\.version_info',
+]
+
+[tool.mypy]
+strict = true
+pretty = true
+show_error_codes = true
+enable_error_code = ["ignore-without-code"]
+ignore_missing_imports = true
+
+exclude = ["tests/test_tstrings"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[tool.ruff]
+src = ["src"]
+line-length = 79
+extend-exclude = ["tests/test_tstrings.py", "examples/"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN",
+    "COM",
+    "D",
+    "E501",
+    "FIX",
+    "ISC001",
+    "TD",
+    "INP001",
+    "TC001",  # internal cross-module imports don't need TYPE_CHECKING
+    "TC003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",
+    "S106",
+    "PLR2004",
+]

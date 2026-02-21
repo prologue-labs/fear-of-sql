@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fear_of_sql_test
+    volumes:
+      - ./tests/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d fear_of_sql_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 10

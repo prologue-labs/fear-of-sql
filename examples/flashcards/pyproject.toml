@@ -1,0 +1,16 @@
+[project]
+name = "flashcards-example"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = ["fear-of-sql", "asyncpg>=0.30", "pg8000>=1.31", "pydantic>=2.12", "typer>=0.21"]
+
+[tool.uv.sources]
+fear-of-sql = { path = "../../", editable = true }
+
+[tool.ruff]
+line-length = 79
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["ANN", "COM", "D", "INP001", "T20"]
