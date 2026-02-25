@@ -1,5 +1,7 @@
 # fear-of-sql
 
+[![PyPI](https://img.shields.io/pypi/v/fear-of-sql)](https://pypi.org/project/fear-of-sql/)
+
 [sqlx](https://github.com/launchbadge/sqlx)-inspired query validation
 for PostgreSQL in Python. Validate your SQL against a real database
 schema at startup, not at runtime. Supports t-string interpolation
