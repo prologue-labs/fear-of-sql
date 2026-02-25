@@ -70,6 +70,12 @@ class Flashcard:
 > DatabaseError: relation "not_a_table" does not exist
 ```
 
+## Installation
+
+```
+pip install fear-of-sql
+```
+
 ## Drivers
 
 ### Validation
