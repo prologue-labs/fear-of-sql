@@ -39,7 +39,6 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
-
 def _execute_sync(
     conn: DBAPIConnection,
     sql: str,
@@ -124,7 +123,11 @@ class Query(BaseQuery, Generic[T]):
 
     async def fetch_one(
         self,
-        executor: asyncpg.Pool | asyncpg.Connection | psycopg.AsyncConnection,
+        executor: asyncpg.Pool
+        | asyncpg.Connection
+        | psycopg.AsyncConnection
+        | sqlalchemy.ext.asyncio.AsyncSession
+        | sqlalchemy.ext.asyncio.AsyncConnection,
     ) -> T:
         async_executor = await _async_executor(executor)
         row = await async_executor.fetch_one(self.sql, self.args)
@@ -135,7 +138,11 @@ class Query(BaseQuery, Generic[T]):
 
     async def fetch_optional(
         self,
-        executor: asyncpg.Pool | asyncpg.Connection | psycopg.AsyncConnection,
+        executor: asyncpg.Pool
+        | asyncpg.Connection
+        | psycopg.AsyncConnection
+        | sqlalchemy.ext.asyncio.AsyncSession
+        | sqlalchemy.ext.asyncio.AsyncConnection,
     ) -> T | None:
         async_executor = await _async_executor(executor)
         row = await async_executor.fetch_one(self.sql, self.args)
@@ -145,7 +152,11 @@ class Query(BaseQuery, Generic[T]):
 
     async def fetch_all(
         self,
-        executor: asyncpg.Pool | asyncpg.Connection | psycopg.AsyncConnection,
+        executor: asyncpg.Pool
+        | asyncpg.Connection
+        | psycopg.AsyncConnection
+        | sqlalchemy.ext.asyncio.AsyncSession
+        | sqlalchemy.ext.asyncio.AsyncConnection,
     ) -> list[T]:
         async_executor = await _async_executor(executor)
         rows = await async_executor.fetch_all(self.sql, self.args)
@@ -195,14 +206,22 @@ class Execute(BaseQuery):
 
     async def execute(
         self,
-        executor: asyncpg.Pool | asyncpg.Connection | psycopg.AsyncConnection,
+        executor: asyncpg.Pool
+        | asyncpg.Connection
+        | psycopg.AsyncConnection
+        | sqlalchemy.ext.asyncio.AsyncSession
+        | sqlalchemy.ext.asyncio.AsyncConnection,
     ) -> None:
         async_executor = await _async_executor(executor)
         await async_executor.execute(self.sql, self.args)
 
     async def execute_rows(
         self,
-        executor: asyncpg.Pool | asyncpg.Connection | psycopg.AsyncConnection,
+        executor: asyncpg.Pool
+        | asyncpg.Connection
+        | psycopg.AsyncConnection
+        | sqlalchemy.ext.asyncio.AsyncSession
+        | sqlalchemy.ext.asyncio.AsyncConnection,
     ) -> int:
         async_executor = await _async_executor(executor)
         return await async_executor.execute(self.sql, self.args)

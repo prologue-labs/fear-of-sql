@@ -7,6 +7,7 @@ from ._query import Execute, Query
 if TYPE_CHECKING:
     import asyncpg
     import psycopg
+    import sqlalchemy.ext.asyncio
 
 T = TypeVar("T")
 
@@ -14,7 +15,11 @@ T = TypeVar("T")
 class AsyncClient:
     def __init__(
         self,
-        executor: asyncpg.Pool | asyncpg.Connection | psycopg.AsyncConnection,
+        executor: asyncpg.Pool
+        | asyncpg.Connection
+        | psycopg.AsyncConnection
+        | sqlalchemy.ext.asyncio.AsyncSession
+        | sqlalchemy.ext.asyncio.AsyncConnection,
     ) -> None:
         self._executor = executor
 
