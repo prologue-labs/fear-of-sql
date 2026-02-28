@@ -1,4 +1,5 @@
 import datetime
+import logging
 import uuid
 from dataclasses import dataclass
 from decimal import Decimal
@@ -894,7 +895,7 @@ def test_validate_passes(conn):
             back,
         )
 
-    fear.validate_all(conn)
+    assert fear.validate_all(conn) == 2
 
 
 def test_validate_raises_on_bad_query(conn):
@@ -961,31 +962,41 @@ def test_validate_unsupported_param_type(conn):
         fear.validate_all(conn)
 
 
-def test_validate_all_verbose(capsys, conn):
+def test_validate_logs_success(caplog, conn):
     fear = FearOfSQL()
 
     @fear.query
     def list_cards() -> Query[Card]:
         return Query("SELECT id, front, back FROM cards", result_type=Card)
 
-    fear.validate_all(conn, verbose=True)
+    with caplog.at_level(logging.INFO, logger="fear_of_sql"):
+        fear.validate_all(conn)
 
-    captured = capsys.readouterr()
-    assert "ok: list_cards" in captured.err
+    assert len(caplog.records) == 1
+    record = caplog.records[0]
+    assert record.levelno == logging.INFO
+    assert "ok: list_cards" in record.message
+    assert "SELECT id, front, back FROM cards" in record.message
 
 
-def test_validate_all_verbose_error(capsys, conn):
+def test_validate_logs_error(caplog, conn):
     fear = FearOfSQL()
 
     @fear.query
     def list_cards() -> Query[int]:
         return Query("SELECT id, front, back FROM cards", result_type=int)
 
-    with pytest.raises(ValidationError):
-        fear.validate_all(conn, verbose=True)
+    with (
+        caplog.at_level(logging.WARNING, logger="fear_of_sql"),
+        pytest.raises(ValidationError),
+    ):
+        fear.validate_all(conn)
 
-    captured = capsys.readouterr()
-    assert "ERR: list_cards" in captured.err
+    assert len(caplog.records) == 1
+    record = caplog.records[0]
+    assert record.levelno == logging.WARNING
+    assert "ERR: list_cards" in record.message
+    assert "SELECT id, front, back FROM cards" in record.message
 
 
 @pytest.mark.asyncio

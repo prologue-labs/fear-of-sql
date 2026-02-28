@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import inspect
-import sys
+import logging
 import types
 import uuid
 from collections.abc import Callable
@@ -30,6 +30,8 @@ from ._resolve import (
     find_column,
     resolve,
 )
+
+logger = logging.getLogger("fear_of_sql")
 
 T = TypeVar("T", bound=BaseQuery)
 P = ParamSpec("P")
@@ -84,37 +86,42 @@ class FearOfSQL:
         return fn
 
     def validate_all(
-        self, conn: pg8000.native.Connection | str, *, verbose: bool = False
-    ) -> None:
+        self, conn: pg8000.native.Connection | str,
+    ) -> int:
         if isinstance(conn, str):
             native_conn = _connect_from_url(conn)
             try:
-                self._validate(native_conn, verbose=verbose)
+                return self._validate(native_conn)
             finally:
                 native_conn.close()
-        else:
-            self._validate(conn, verbose=verbose)
+        return self._validate(conn)
 
-    def _validate(self, conn: pg8000.native.Connection, *, verbose: bool) -> None:
+    def _validate(self, conn: pg8000.native.Connection) -> int:
+        count = 0
         for fn in self._queries:
             kwargs = {arg.param_name: arg.value for arg in _make_dummy_args(fn)}
             query_obj = fn(**kwargs)
+            sql_oneline = " ".join(str(query_obj.sql).split())
             result_type = (
                 query_obj.result_type if isinstance(query_obj, Query) else None
             )
             for error in collect_errors(conn, query_obj.sql, result_type):
-                if verbose:
-                    print(  # noqa: T201
-                        f" ERR: {fn.__name__}: {error}\n      {query_obj.sql}",
-                        file=sys.stderr,
-                    )
+                logger.warning(
+                    "ERR: %s — %s — %s",
+                    fn.__name__,
+                    error,
+                    sql_oneline,
+                )
                 error.query_name = fn.__name__
                 error.sql = str(query_obj.sql)
                 raise error
-            if verbose:
-                print(  # noqa: T201
-                    f"  ok: {fn.__name__}\n      {query_obj.sql}", file=sys.stderr
-                )
+            logger.info(
+                "ok: %s — %s",
+                fn.__name__,
+                sql_oneline,
+            )
+            count += 1
+        return count
 
 
 def collect_errors(
