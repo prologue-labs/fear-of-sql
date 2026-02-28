@@ -17,6 +17,8 @@ if sys.version_info < (3, 14):
     collect_ignore = ["test_tstrings.py"]
 
 DB_URL = "postgresql://user:password@localhost:5433/fear_of_sql_test"
+SA_ASYNCPG_URL = DB_URL.replace("postgresql://", "postgresql+asyncpg://")
+SA_PSYCOPG_URL = DB_URL.replace("postgresql://", "postgresql+psycopg://")
 SETUP_SQL = pathlib.Path(__file__).parent / "setup.sql"
 
 
@@ -74,9 +76,7 @@ async def psycopg_conn():
 
 @pytest_asyncio.fixture
 async def sa_async_session():
-    engine = create_async_engine(
-        DB_URL.replace("postgresql://", "postgresql+asyncpg://"),
-    )
+    engine = create_async_engine(SA_ASYNCPG_URL)
     async with AsyncSession(engine) as session:
         yield session
     await engine.dispose()
@@ -84,9 +84,23 @@ async def sa_async_session():
 
 @pytest_asyncio.fixture
 async def sa_async_conn():
-    engine = create_async_engine(
-        DB_URL.replace("postgresql://", "postgresql+asyncpg://"),
-    )
+    engine = create_async_engine(SA_ASYNCPG_URL)
+    async with engine.connect() as conn:
+        yield conn
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def sa_psycopg_session():
+    engine = create_async_engine(SA_PSYCOPG_URL)
+    async with AsyncSession(engine) as session:
+        yield session
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def sa_psycopg_conn():
+    engine = create_async_engine(SA_PSYCOPG_URL)
     async with engine.connect() as conn:
         yield conn
     await engine.dispose()

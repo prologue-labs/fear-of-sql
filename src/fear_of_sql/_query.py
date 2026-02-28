@@ -57,17 +57,19 @@ async def _async_executor(
     | sqlalchemy.ext.asyncio.AsyncSession
     | sqlalchemy.ext.asyncio.AsyncConnection,
 ) -> AsyncExecutor:
+    if isinstance(executor, _SA_ASYNC_CONN_TYPES):
+        pool_proxied = await executor.get_raw_connection()  # type: ignore[attr-defined]
+        executor = pool_proxied.driver_connection
+    elif isinstance(executor, _SA_ASYNC_SESSION_TYPES):
+        sa_connection = await executor.connection()  # type: ignore[attr-defined]
+        pool_proxied = await sa_connection.get_raw_connection()
+        executor = pool_proxied.driver_connection
+
     if isinstance(executor, (asyncpg.Connection, asyncpg.Pool)):
         return AsyncpgExecutor(executor)
     if PsycopgExecutor is not None and isinstance(executor, _PSYCOPG_TYPES):
         return PsycopgExecutor(executor)  # type: ignore[arg-type]
-    if isinstance(executor, _SA_ASYNC_CONN_TYPES):
-        pool_proxied = await executor.get_raw_connection()  # type: ignore[attr-defined]
-        return AsyncpgExecutor(pool_proxied.driver_connection)
-    if isinstance(executor, _SA_ASYNC_SESSION_TYPES):
-        sa_connection = await executor.connection()  # type: ignore[attr-defined]
-        pool_proxied = await sa_connection.get_raw_connection()
-        return AsyncpgExecutor(pool_proxied.driver_connection)
+
     msg = f"unsupported executor type: {type(executor).__name__}"
     raise TypeError(msg)
 
