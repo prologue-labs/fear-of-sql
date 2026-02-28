@@ -5,6 +5,10 @@ import pg8000.dbapi
 import psycopg
 import pytest
 import pytest_asyncio
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
+)
 
 import fear_of_sql as fos
 
@@ -47,3 +51,25 @@ async def psycopg_conn():
     conn = await psycopg.AsyncConnection.connect(DB_URL)
     yield conn
     await conn.close()
+
+
+@pytest_asyncio.fixture
+async def sa_async_session():
+    engine = create_async_engine(
+        DB_URL.replace("postgresql://", "postgresql+asyncpg://"),
+    )
+    async with AsyncSession(engine) as session:
+        yield session
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def sa_async_conn():
+    engine = create_async_engine(
+        DB_URL.replace("postgresql://", "postgresql+asyncpg://"),
+    )
+    async with engine.connect() as conn:
+        yield conn
+    await engine.dispose()
+
+

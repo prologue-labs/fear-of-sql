@@ -1041,6 +1041,140 @@ async def test_psycopg_executor(psycopg_conn):
 
 
 @pytest.mark.asyncio
+async def test_sqlalchemy_async_session(sa_async_session):
+    query = Query(
+        "SELECT id, front, back FROM cards WHERE id = $1",
+        Card,
+        1,
+    )
+    card = await query.fetch_one(sa_async_session)
+    assert card == Card(id=1, front="bonjour", back="hello")
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_session_fetch_optional(sa_async_session):
+    query = Query(
+        "SELECT id, front, back FROM cards WHERE id = $1",
+        Card,
+        1,
+    )
+    card = await query.fetch_optional(sa_async_session)
+    assert card == Card(id=1, front="bonjour", back="hello")
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_session_fetch_optional_none(sa_async_session):
+    query = Query(
+        "SELECT id, front, back FROM cards WHERE id = $1",
+        Card,
+        9999,
+    )
+    assert await query.fetch_optional(sa_async_session) is None
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_session_fetch_all(sa_async_session):
+    query = Query(
+        "SELECT id, front, back FROM cards ORDER BY id",
+        Card,
+    )
+    cards = await query.fetch_all(sa_async_session)
+    assert len(cards) == 3
+    assert cards[0] == Card(id=1, front="bonjour", back="hello")
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_conn(sa_async_conn):
+    query = Query(
+        "SELECT id, front, back FROM cards WHERE id = $1",
+        Card,
+        1,
+    )
+    card = await query.fetch_one(sa_async_conn)
+    assert card == Card(id=1, front="bonjour", back="hello")
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_conn_fetch_optional(sa_async_conn):
+    query = Query(
+        "SELECT id, front, back FROM cards WHERE id = $1",
+        Card,
+        1,
+    )
+    card = await query.fetch_optional(sa_async_conn)
+    assert card == Card(id=1, front="bonjour", back="hello")
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_conn_fetch_optional_none(sa_async_conn):
+    query = Query(
+        "SELECT id, front, back FROM cards WHERE id = $1",
+        Card,
+        9999,
+    )
+    assert await query.fetch_optional(sa_async_conn) is None
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_conn_fetch_all(sa_async_conn):
+    query = Query(
+        "SELECT id, front, back FROM cards ORDER BY id",
+        Card,
+    )
+    cards = await query.fetch_all(sa_async_conn)
+    assert len(cards) == 3
+    assert cards[0] == Card(id=1, front="bonjour", back="hello")
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_session_execute(sa_async_session):
+    exe = Execute(
+        "INSERT INTO cards (front, back) VALUES ($1, $2)",
+        "sa_session_test",
+        "bye",
+    )
+    await exe.execute(sa_async_session)
+    await Execute(
+        "DELETE FROM cards WHERE front = $1", "sa_session_test"
+    ).execute(sa_async_session)
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_session_execute_rows(sa_async_session):
+    await Execute(
+        "INSERT INTO cards (front, back) VALUES ($1, $2)",
+        "sa_session_rows",
+        "bye",
+    ).execute(sa_async_session)
+    exe = Execute("DELETE FROM cards WHERE front = $1", "sa_session_rows")
+    assert await exe.execute_rows(sa_async_session) == 1
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_conn_execute(sa_async_conn):
+    exe = Execute(
+        "INSERT INTO cards (front, back) VALUES ($1, $2)",
+        "sa_conn_test",
+        "bye",
+    )
+    await exe.execute(sa_async_conn)
+    await Execute(
+        "DELETE FROM cards WHERE front = $1", "sa_conn_test"
+    ).execute(sa_async_conn)
+
+
+@pytest.mark.asyncio
+async def test_sqlalchemy_async_conn_execute_rows(sa_async_conn):
+    await Execute(
+        "INSERT INTO cards (front, back) VALUES ($1, $2)",
+        "sa_conn_rows",
+        "bye",
+    ).execute(sa_async_conn)
+    exe = Execute("DELETE FROM cards WHERE front = $1", "sa_conn_rows")
+    assert await exe.execute_rows(sa_async_conn) == 1
+
+
+@pytest.mark.asyncio
 async def test_unsupported_executor():
     q = Query("SELECT 1 AS id", result_type=int)
     with pytest.raises(TypeError, match="unsupported executor type"):
