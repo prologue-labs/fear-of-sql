@@ -3,7 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/fear-of-sql)](https://pypi.org/project/fear-of-sql/)
 
 [sqlx](https://github.com/launchbadge/sqlx)-inspired query validation
-for PostgreSQL in Python. Validate your SQL against a real database
+for PostgreSQL in Python. Validate SQL against a real database
 schema at startup, not at runtime. Supports t-string interpolation
 (Python 3.14+).
 
@@ -31,7 +31,7 @@ def get_user(user_id: int) -> fos.Query[User]:
         user_id,
     )
 
-# validates all decorated queries against your DB
+# validate all decorated queries against your DB
 fear.validate_all("postgresql://localhost/mydb")
 
 # execution helpers, fetch_one, fetch_all, fetch_optional, execute
@@ -65,7 +65,7 @@ class Flashcard:
 >>> fos.collect_errors(conn, "SELECT id, front, back FROM flashcards", Flashcard)
 > TypeMismatchError("column 'back': expected ['int'], got str")
 
-# table doesn't exist
+# table doesn't exist, surfaces driver error
 >>> fos.collect_errors(conn, "SELECT id FROM not_a_table", int)
 > DatabaseError: relation "not_a_table" does not exist
 ```
@@ -76,38 +76,45 @@ class Flashcard:
 pip install fear-of-sql
 ```
 
+## SQLAlchemy async drop-in support
+
+To facilitate replacing existing SQLAlchemy async call sites with
+`fear-of-sql` queries, the execution helpers support
+`AsyncSession` and `AsyncConnection` from `sqlalchemy.ext.asyncio`.
+Internally, the raw connection is extracted from the session, so
+queries participate in the active transaction.
+
+```python
+async with async_session() as session:
+    # SQLAlchemy 2.0 async
+    # result = await session.execute(select(User).where(User.id == 42))
+    # user = result.scalar_one()
+
+    # fear-of-sql
+    user = await get_user(user_id=42).fetch_one(session)
+```
+
 ## Drivers
+
+### Driver support
+
+`asyncpg` is used by default for async execution helpers.
+
+`psycopg` is optionally supported for async by using your psycopg connections.
+
+For sync operations, pass a DB-API 2.0 compatible connection.
 
 ### Validation
 
-Validation requires `pg8000.native` as it exposes the column
+Validation uses `pg8000.native` internally as it exposes the column
 metadata (`table_oid`, `column_attrnum`) needed for nullability
 inference via `pg_catalog`. DB-API 2.0 compatible drivers do
 not expose this information.
 
-
-### Additional driver support
-
-`asyncpg` is used by default for async execution helpers.
-
-`psycopg` is supported, but optional:
-
-```sh
-pip install fear-of-sql[psycopg]
-```
-
-### Execution
-
-
-| Driver | Async | Sync |
-|---|---|---|
-| asyncpg | yes | — |
-| psycopg | yes | yes |
-| pg8000 (DB-API) | — | yes |
+## Query format
 
 Queries can use either `$1` or `%s` parameter style, or t-string interpolation
 on supported Python versions (3.14+).
-
 
 ## Nullability overrides
 
@@ -171,4 +178,4 @@ supported by the validation architecture.
 
 ### Extension Types
 
-Types from extensions (`hstore`, `ltree`, `citext`, etc.) are not supported.
+Types from extensions (`hstore`, `ltree`, `citext`, etc.) are currently not supported.
