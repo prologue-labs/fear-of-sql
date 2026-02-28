@@ -1,3 +1,4 @@
+import pathlib
 import sys
 
 import asyncpg
@@ -16,6 +17,24 @@ if sys.version_info < (3, 14):
     collect_ignore = ["test_tstrings.py"]
 
 DB_URL = "postgresql://user:password@localhost:5433/fear_of_sql_test"
+SETUP_SQL = pathlib.Path(__file__).parent / "setup.sql"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _seed_db():
+    conn = pg8000.dbapi.connect(
+        user="user",
+        host="localhost",
+        port=5433,
+        database="fear_of_sql_test",
+        password="password",
+    )
+    conn.autocommit = True
+    cursor = conn.cursor()
+    cursor.execute("DROP SCHEMA public CASCADE")
+    cursor.execute("CREATE SCHEMA public")
+    cursor.execute(SETUP_SQL.read_text())
+    conn.close()
 
 
 @pytest.fixture
