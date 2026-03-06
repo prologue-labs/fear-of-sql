@@ -61,12 +61,13 @@ _DUMMY_VALUES: dict[type, object] = {
 
 def _make_dummy_args(fn: Callable[..., BaseQuery]) -> list[DummyArg]:
     sig = inspect.signature(fn)
+    annotations = inspect.get_annotations(fn, eval_str=True)
     result: list[DummyArg] = []
-    for param_name, param in sig.parameters.items():
-        annotation = param.annotation
-        if annotation is inspect.Parameter.empty:
+    for param_name in sig.parameters:
+        if param_name not in annotations:
             msg = f"{fn.__name__}: parameter {param_name!r} has no type annotation"
             raise TypeError(msg)
+        annotation = annotations[param_name]
         dummy_value = _DUMMY_VALUES.get(annotation)
         if dummy_value is None and hasattr(annotation, "__origin__"):
             dummy_value = _DUMMY_VALUES.get(annotation.__origin__)
