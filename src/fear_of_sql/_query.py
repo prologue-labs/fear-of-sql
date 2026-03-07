@@ -76,18 +76,22 @@ async def _async_executor(
     raise TypeError(msg)
 
 
+def _strip_override(name: str) -> str:
+    return name[:-1] if name.endswith(("!", "?")) else name
+
+
 def _col_names(cursor: DBAPICursor) -> list[str]:
     if cursor.description is None:  # pragma: no cover
         msg = "query returned no description"
         raise RuntimeError(msg)
-    return [desc[0] for desc in cursor.description]
+    return [_strip_override(desc[0]) for desc in cursor.description]
 
 
 def _construct_result(result_type: type[T], row: Mapping[str, Any]) -> T:
     if dataclasses.is_dataclass(result_type) or hasattr(
         result_type, "model_fields"
     ):
-        return result_type(**row)
+        return result_type(**{_strip_override(k): v for k, v in row.items()})
     return next(iter(row.values()))  # type: ignore[no-any-return]
 
 

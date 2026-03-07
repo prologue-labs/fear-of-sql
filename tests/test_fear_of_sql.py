@@ -691,6 +691,34 @@ def test_query_fetch_optional_sync_none(dbapi_conn):
     assert query.fetch_optional_sync(dbapi_conn) is None
 
 
+def test_query_fetch_one_sync_non_null_override(dbapi_conn):
+    fear = FearOfSQL()
+
+    @dataclass
+    class Row:
+        front: str
+
+    @fear.query
+    def get_front(card_id: int) -> Query[Row]:
+        return Query('SELECT front AS "front!" FROM cards WHERE id = %s', Row, card_id)
+
+    assert get_front(1).fetch_one_sync(dbapi_conn) == Row(front="bonjour")
+
+
+def test_query_fetch_one_sync_nullable_override(dbapi_conn):
+    fear = FearOfSQL()
+
+    @dataclass
+    class Row:
+        front: str | None
+
+    @fear.query
+    def get_front(card_id: int) -> Query[Row]:
+        return Query('SELECT front AS "front?" FROM cards WHERE id = %s', Row, card_id)
+
+    assert get_front(1).fetch_one_sync(dbapi_conn) == Row(front="bonjour")
+
+
 def test_query_fetch_all_sync(dbapi_conn):
     query = Query("SELECT id, front, back FROM cards ORDER BY id", Card)
     cards = query.fetch_all_sync(dbapi_conn)
@@ -830,6 +858,36 @@ async def test_query_fetch_optional_async_none(asyncpg_pool):
         9999,
     )
     assert await query.fetch_optional(asyncpg_pool) is None
+
+
+@pytest.mark.asyncio
+async def test_query_fetch_one_async_non_null_override(asyncpg_pool):
+    fear = FearOfSQL()
+
+    @dataclass
+    class Row:
+        front: str
+
+    @fear.query
+    def get_front(card_id: int) -> Query[Row]:
+        return Query('SELECT front AS "front!" FROM cards WHERE id = $1', Row, card_id)
+
+    assert await get_front(1).fetch_one(asyncpg_pool) == Row(front="bonjour")
+
+
+@pytest.mark.asyncio
+async def test_query_fetch_one_async_nullable_override(asyncpg_pool):
+    fear = FearOfSQL()
+
+    @dataclass
+    class Row:
+        front: str | None
+
+    @fear.query
+    def get_front(card_id: int) -> Query[Row]:
+        return Query('SELECT front AS "front?" FROM cards WHERE id = $1', Row, card_id)
+
+    assert await get_front(1).fetch_one(asyncpg_pool) == Row(front="bonjour")
 
 
 @pytest.mark.asyncio
