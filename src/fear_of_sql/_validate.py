@@ -4,6 +4,7 @@ import datetime
 import inspect
 import logging
 import types
+import typing
 import uuid
 from collections.abc import Callable
 from decimal import Decimal
@@ -68,13 +69,21 @@ def _make_dummy_args(fn: Callable[..., BaseQuery]) -> list[DummyArg]:
             msg = f"{fn.__name__}: parameter {param_name!r} has no type annotation"
             raise TypeError(msg)
         annotation = annotations[param_name]
-        dummy_value = _DUMMY_VALUES.get(annotation)
-        if dummy_value is None and hasattr(annotation, "__origin__"):
-            dummy_value = _DUMMY_VALUES.get(annotation.__origin__)
-        if dummy_value is None:
-            msg = f"{fn.__name__}: no dummy value for type {annotation!r} on parameter {param_name!r}"
-            raise TypeError(msg)
-        result.append(DummyArg(param_name, dummy_value))
+        args = typing.get_args(annotation)
+        if type(None) in args:
+            result.append(DummyArg(param_name, None))
+            continue
+        if annotation in _DUMMY_VALUES:
+            dummy_value = _DUMMY_VALUES[annotation]
+            result.append(DummyArg(param_name, dummy_value))
+            continue
+        origin = typing.get_origin(annotation)
+        if isinstance(origin, type) and origin in _DUMMY_VALUES:
+            origin_dummy_value = _DUMMY_VALUES[origin]
+            result.append(DummyArg(param_name, origin_dummy_value))
+            continue
+        msg = f"{fn.__name__}: no dummy value for type {annotation!r} on parameter {param_name!r}"
+        raise TypeError(msg)
     return result
 
 

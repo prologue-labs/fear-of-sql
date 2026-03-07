@@ -3,6 +3,7 @@ import logging
 import uuid
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import Generic, TypeVar
 
 import pg8000
 import pytest
@@ -960,6 +961,36 @@ def test_validate_unsupported_param_type(conn):
 
     with pytest.raises(TypeError, match="no dummy value"):
         fear.validate_all(conn)
+
+
+def test_validate_unsupported_generic_param_type(conn):
+    T = TypeVar("T")
+
+    class Foo(Generic[T]):
+        pass
+
+    fear = FearOfSQL()
+
+    @fear.query
+    def bad(x: Foo[int]) -> Query[int]:
+        return Query("SELECT $1", int, x)
+
+    with pytest.raises(TypeError, match="no dummy value"):
+        fear.validate_all(conn)
+
+
+def test_validate_optional_typing(conn):
+    fear = FearOfSQL()
+
+    @fear.query
+    def search(limit: int | None) -> Query[int]:
+        return Query(
+            "SELECT id FROM cards LIMIT $1",
+            int,
+            limit,
+        )
+
+    fear.validate_all(conn)
 
 
 def test_validate_logs_success(caplog, conn):
