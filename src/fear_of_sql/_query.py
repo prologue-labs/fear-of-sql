@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 import asyncpg
 
 from ._compat import Template, render
+from ._errors import RowNotFoundError
 from ._executor import AsyncExecutor, AsyncpgExecutor
 
 try:
@@ -132,8 +133,7 @@ class Query(BaseQuery, Generic[T]):
         async_executor = await _async_executor(executor)
         row = await async_executor.fetch_one(self.sql, self.args)
         if row is None:
-            msg = "fetch_one: query returned no rows"
-            raise RuntimeError(msg)
+            raise RowNotFoundError
         return _construct_result(self.result_type, row)
 
     async def fetch_optional(
@@ -166,8 +166,7 @@ class Query(BaseQuery, Generic[T]):
         cursor = _execute_sync(conn, str(self.sql), self.args)
         row = cursor.fetchone()
         if row is None:
-            msg = "fetch_one: query returned no rows"
-            raise RuntimeError(msg)
+            raise RowNotFoundError
         return _construct_dbapi_result(
             self.result_type, _col_names(cursor), row
         )

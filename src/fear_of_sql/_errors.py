@@ -48,6 +48,10 @@ class NullabilityError(ValidationError):
         )
 
 
+class RowNotFoundError(Exception):
+    """fetch_one() returned no rows."""
+
+
 class UnsupportedTypeError(Exception):
     def __init__(
         self,

@@ -19,6 +19,7 @@ from fear_of_sql import (
     FearOfSQL,
     NullabilityError,
     Query,
+    RowNotFoundError,
     SyncClient,
     TypeMismatchError,
     UnsupportedTypeError,
@@ -592,7 +593,7 @@ def test_sync_fetch_one(dbapi_conn):
 
 def test_sync_fetch_one_no_rows(dbapi_conn):
     client = SyncClient(dbapi_conn)
-    with pytest.raises(RuntimeError, match="no rows"):
+    with pytest.raises(RowNotFoundError):
         client.fetch_one(
             "SELECT id, front, back FROM cards WHERE id = 9999",
             Card,
@@ -671,7 +672,7 @@ def test_query_fetch_one_sync_no_rows(dbapi_conn):
         Card,
         9999,
     )
-    with pytest.raises(RuntimeError, match="no rows"):
+    with pytest.raises(RowNotFoundError):
         query.fetch_one_sync(dbapi_conn)
 
 
@@ -729,7 +730,7 @@ async def test_async_fetch_one(asyncpg_pool):
 @pytest.mark.asyncio
 async def test_async_fetch_one_no_rows(asyncpg_pool):
     client = AsyncClient(asyncpg_pool)
-    with pytest.raises(RuntimeError, match="no rows"):
+    with pytest.raises(RowNotFoundError):
         await client.fetch_one(
             "SELECT id, front, back FROM cards WHERE id = $1",
             Card,
