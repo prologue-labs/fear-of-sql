@@ -25,7 +25,11 @@ dev = [
     "pytest-asyncio>=1.3.0",
     "ruff>=0.11",
     "sqlalchemy[asyncio]>=2.0",
+    "basedpyright>=1.38",
 ]
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
 
 [tool.pytest.ini_options]
 strict_markers = true

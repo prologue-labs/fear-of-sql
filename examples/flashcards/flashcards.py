@@ -108,7 +108,8 @@ def delete(id: int):
 
 @app.callback(invoke_without_command=True)
 def main(ctx: typer.Context):
-    fear.validate_all(DB_URL)
+    validated_count = fear.validate_all(DB_URL)
+    print(f" Validated {validated_count} queries")
 
     if ctx.invoked_subcommand is None:
         list_cards()
