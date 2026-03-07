@@ -10,7 +10,7 @@ wheels/
 htmlcov/
 .pytest_cache/
 .mypy_cache/
-uv.lock
+examples/**/uv.lock
 
 
 # Virtual environments

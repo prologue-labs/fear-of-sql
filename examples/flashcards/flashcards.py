@@ -108,7 +108,7 @@ def delete(id: int):
 
 @app.callback(invoke_without_command=True)
 def main(ctx: typer.Context):
-    fear.validate_all(DB_URL, verbose=True)
+    fear.validate_all(DB_URL)
 
     if ctx.invoked_subcommand is None:
         list_cards()
