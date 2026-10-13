@@ -88,10 +88,11 @@ def extract_expected(
         return [t]
 
     if is_dataclass(result_type):
+        hints = typing.get_type_hints(result_type)
         return [
             ExpectedColumn(
                 name=field.name,
-                allowed_types=_unwrap_types(field.type),
+                allowed_types=_unwrap_types(hints[field.name]),
             )
             for field in fields(result_type)
         ]
