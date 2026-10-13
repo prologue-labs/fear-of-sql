@@ -63,18 +63,29 @@ def _visit_plan(
     plan: PlanNode,
     root_outputs: list[str],
     nullables: list[bool],
+    parent_join_type: JoinType | None = None,
 ) -> None:
-    if (
-        plan.join_type == JoinType.FULL
-        or plan.parent_relation == ParentRelation.INNER
-    ):
+    is_nullable = (
+        (
+            parent_join_type == JoinType.LEFT
+            and plan.parent_relation == ParentRelation.INNER
+        )
+        or (
+            parent_join_type == JoinType.RIGHT
+            and plan.parent_relation == ParentRelation.OUTER
+        )
+        or (
+            parent_join_type == JoinType.FULL
+            and plan.parent_relation
+            in (ParentRelation.INNER, ParentRelation.OUTER)
+        )
+    )
+    if is_nullable:
         for col in plan.output:
             if col in root_outputs:
                 nullables[root_outputs.index(col)] = True
-
-    if plan.join_type in (JoinType.LEFT, JoinType.RIGHT):
-        for child in plan.children:
-            _visit_plan(child, root_outputs, nullables)
+    for child in plan.children:
+        _visit_plan(child, root_outputs, nullables, plan.join_type)
 
 
 def _pg_supports_plan_cache_mode(conn: pg8000.native.Connection) -> bool:

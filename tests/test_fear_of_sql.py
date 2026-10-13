@@ -338,7 +338,6 @@ def test_inner_join_preserves_nullability(conn):
     assert not errors
 
 
-@pytest.mark.xfail(reason="postgres version dependent behavior, requires fix")
 def test_left_join_subquery_nullable(conn):
     @dataclass
     class Result:
@@ -349,6 +348,22 @@ def test_left_join_subquery_nullable(conn):
         conn,
         'SELECT sq.val as "val!", reviews.score FROM (SELECT 1 AS val) sq LEFT JOIN reviews ON sq.val = reviews.card_id',
         Result,
+    )
+    assert len(errors) == 1
+    assert isinstance(errors[0], NullabilityError)
+    assert errors[0].column == "score"
+
+
+def test_left_join_nullable(conn):
+    @dataclass
+    class CardReview:
+        front: str
+        score: int
+
+    errors = collect_errors(
+        conn,
+        "SELECT cards.front, reviews.score FROM cards LEFT JOIN reviews ON cards.id = reviews.card_id",
+        CardReview,
     )
     assert len(errors) == 1
     assert isinstance(errors[0], NullabilityError)
