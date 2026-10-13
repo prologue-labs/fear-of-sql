@@ -3,7 +3,7 @@ import logging
 import uuid
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Generic, TypeVar
+from typing import Generic, Optional, TypeVar, Union
 
 import pg8000
 import pytest
@@ -80,6 +80,24 @@ def test_nullable_scalar(conn):
         conn,
         "SELECT notes FROM cards",
         str | None,
+    )
+    assert not errors
+
+
+def test_optional_scalar(conn):
+    errors = collect_errors(
+        conn,
+        "SELECT notes FROM cards",
+        Optional[str],  # noqa: UP045
+    )
+    assert not errors
+
+
+def test_union_scalar(conn):
+    errors = collect_errors(
+        conn,
+        "SELECT notes FROM cards",
+        Union[str, None],  # noqa: UP007
     )
     assert not errors
 

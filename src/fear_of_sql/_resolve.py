@@ -1,4 +1,5 @@
 import types
+import typing
 from dataclasses import dataclass, fields, is_dataclass
 from typing import Any
 
@@ -81,8 +82,9 @@ def extract_expected(
     result_type: Any,
 ) -> ExpectedScalar | list[ExpectedColumn]:
     def _unwrap_types(t: Any) -> list[type]:
-        if isinstance(t, types.UnionType):
-            return list(t.__args__)
+        origin = typing.get_origin(t)
+        if origin is typing.Union or origin is types.UnionType:
+            return list(typing.get_args(t))
         return [t]
 
     if is_dataclass(result_type):
