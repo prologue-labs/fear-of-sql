@@ -1,5 +1,7 @@
+import os
 import pathlib
 import sys
+from urllib.parse import unquote, urlparse
 
 import asyncpg
 import pg8000.dbapi
@@ -16,21 +18,29 @@ import fear_of_sql as fos
 if sys.version_info < (3, 14):
     collect_ignore = ["test_tstrings.py"]
 
-DB_URL = "postgresql://user:password@localhost:5433/fear_of_sql_test"
+DB_URL = os.environ.get(
+    "FEAR_OF_SQL_TEST_DATABASE_URL",
+    "postgresql://user:password@localhost:5433/fear_of_sql_test",
+)
 SA_ASYNCPG_URL = DB_URL.replace("postgresql://", "postgresql+asyncpg://")
 SA_PSYCOPG_URL = DB_URL.replace("postgresql://", "postgresql+psycopg://")
 SETUP_SQL = pathlib.Path(__file__).parent / "setup.sql"
 
 
+def _dbapi_connect(url_str: str) -> pg8000.dbapi.Connection:
+    url = urlparse(url_str)
+    return pg8000.dbapi.connect(
+        user=unquote(url.username or ""),
+        password=unquote(url.password) if url.password else None,
+        host=url.hostname or "localhost",
+        port=url.port or 5432,
+        database=url.path.lstrip("/"),
+    )
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _seed_db():
-    conn = pg8000.dbapi.connect(
-        user="user",
-        host="localhost",
-        port=5433,
-        database="fear_of_sql_test",
-        password="password",
-    )
+    conn = _dbapi_connect(DB_URL)
     conn.autocommit = True
     cursor = conn.cursor()
     cursor.execute("DROP SCHEMA public CASCADE")
@@ -47,13 +57,7 @@ def conn():
 
 @pytest.fixture
 def dbapi_conn():
-    conn = pg8000.dbapi.connect(
-        user="user",
-        host="localhost",
-        port=5433,
-        database="fear_of_sql_test",
-        password="password",
-    )
+    conn = _dbapi_connect(DB_URL)
     conn.autocommit = False
     yield conn
     conn.rollback()

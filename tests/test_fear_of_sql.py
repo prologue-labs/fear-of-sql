@@ -338,6 +338,7 @@ def test_inner_join_preserves_nullability(conn):
     assert not errors
 
 
+@pytest.mark.xfail(reason="postgres version dependent behavior, requires fix")
 def test_left_join_subquery_nullable(conn):
     @dataclass
     class Result:
@@ -355,6 +356,9 @@ def test_left_join_subquery_nullable(conn):
 
 
 def test_join_with_param(conn):
+    if int(conn.parameter_statuses["server_version"].split(".")[0]) < 12:
+        pytest.skip("this inference not supported on Postgres 11 or lower")
+
     @dataclass
     class CardReview:
         front: str

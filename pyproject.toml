@@ -39,6 +39,7 @@ testpaths = ["tests"]
 [tool.coverage.run]
 branch = true
 source = ["fear_of_sql"]
+parallel = true
 
 [tool.coverage.report]
 show_missing = true
