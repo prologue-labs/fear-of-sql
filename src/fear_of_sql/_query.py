@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
+
 def _execute_sync(
     conn: DBAPIConnection,
     sql: str,
@@ -69,7 +70,9 @@ async def _async_executor(
 
     if isinstance(raw_executor, (asyncpg.Connection, asyncpg.Pool)):
         return AsyncpgExecutor(raw_executor)
-    if PsycopgExecutor is not None and isinstance(raw_executor, _PSYCOPG_TYPES):
+    if PsycopgExecutor is not None and isinstance(
+        raw_executor, _PSYCOPG_TYPES
+    ):
         return PsycopgExecutor(raw_executor)  # type: ignore[arg-type]
 
     msg = f"unsupported executor type: {type(raw_executor).__name__}"

@@ -43,8 +43,7 @@ class NullabilityError(ValidationError):
     def __init__(self, column: str) -> None:
         self.column = column
         super().__init__(
-            f"column {column!r} is nullable"
-            " but type does not allow None"
+            f"column {column!r} is nullable but type does not allow None"
         )
 
 
@@ -61,6 +60,5 @@ class UnsupportedTypeError(Exception):
         self.type_oid = type_oid
         self.column = column
         super().__init__(
-            f"unsupported PostgreSQL type OID"
-            f" {type_oid} for column {column!r}"
+            f"unsupported PostgreSQL type OID {type_oid} for column {column!r}"
         )

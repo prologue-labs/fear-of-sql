@@ -6,7 +6,9 @@ from psycopg.rows import dict_row
 
 
 class PsycopgExecutor:
-    def __init__(self, executor: psycopg.AsyncConnection[dict[str, Any]]) -> None:
+    def __init__(
+        self, executor: psycopg.AsyncConnection[dict[str, Any]]
+    ) -> None:
         self._executor = executor
 
     async def fetch_one(

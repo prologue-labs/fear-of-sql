@@ -61,7 +61,10 @@ def _visit_plan(
     root_outputs: list[str],
     nullables: list[bool],
 ) -> None:
-    if plan.join_type == JoinType.FULL or plan.parent_relation == ParentRelation.INNER:
+    if (
+        plan.join_type == JoinType.FULL
+        or plan.parent_relation == ParentRelation.INNER
+    ):
         for col in plan.output:
             if col in root_outputs:
                 nullables[root_outputs.index(col)] = True
@@ -93,7 +96,9 @@ def collect_explain_nullability(
     nulls = ", ".join(["NULL"] * param_count)
     params_clause = f"({nulls})" if nulls else ""
 
-    result = conn.run(f"EXPLAIN (VERBOSE, FORMAT JSON) EXECUTE {stmt}{params_clause}")
+    result = conn.run(
+        f"EXPLAIN (VERBOSE, FORMAT JSON) EXECUTE {stmt}{params_clause}"
+    )
 
     if result is None:  # pragma: no cover
         msg = "EXPLAIN returned no rows"

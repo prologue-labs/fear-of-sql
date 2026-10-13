@@ -104,5 +104,3 @@ async def sa_psycopg_conn():
     async with engine.connect() as conn:
         yield conn
     await engine.dispose()
-
-

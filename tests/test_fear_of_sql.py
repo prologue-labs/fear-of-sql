@@ -207,7 +207,9 @@ def test_pydantic_dataclass(conn):
         front: str
         back: str
 
-    errors = collect_errors(conn, "SELECT front, back FROM cards", PydanticCard)
+    errors = collect_errors(
+        conn, "SELECT front, back FROM cards", PydanticCard
+    )
     assert not errors
 
 
@@ -503,12 +505,18 @@ def test_left_join_nullable_override_catches_error(conn):
         ('SELECT 133326::oid AS "val!"', int),
         ('''SELECT DATE '2000-02-07' AS "val!"''', datetime.date),
         ('''SELECT TIME '07:32:38.027824' AS "val!"''', datetime.time),
-        ('''SELECT '2017-04-23 20:44:34'::timestamp AS "val!"''', datetime.datetime),
+        (
+            '''SELECT '2017-04-23 20:44:34'::timestamp AS "val!"''',
+            datetime.datetime,
+        ),
         (
             '''SELECT TIMESTAMPTZ '2013-04-15 18:17:51+00' AS "val!"''',
             datetime.datetime,
         ),
-        ('''SELECT INTERVAL '28 days 1 hours' AS "val!"''', datetime.timedelta),
+        (
+            '''SELECT INTERVAL '28 days 1 hours' AS "val!"''',
+            datetime.timedelta,
+        ),
         (
             '''SELECT 'b2b9437a-28df-6ec4-ce4a-2bbdc241330b'::uuid AS "val!"''',
             uuid.UUID,
@@ -530,8 +538,14 @@ def test_left_join_nullable_override_catches_error(conn):
         ('SELECT ARRAY[\'a\']::"char"[] AS "val!"', list[str]),
         ("SELECT ARRAY['\\xDEAD']::bytea[] AS \"val!\"", list[bytes]),
         ('SELECT ARRAY[1]::oid[] AS "val!"', list[int]),
-        ("SELECT ARRAY[DATE '2000-02-07']::date[] AS \"val!\"", list[datetime.date]),
-        ("SELECT ARRAY[TIME '07:32:38']::time[] AS \"val!\"", list[datetime.time]),
+        (
+            "SELECT ARRAY[DATE '2000-02-07']::date[] AS \"val!\"",
+            list[datetime.date],
+        ),
+        (
+            "SELECT ARRAY[TIME '07:32:38']::time[] AS \"val!\"",
+            list[datetime.time],
+        ),
         (
             "SELECT ARRAY['2017-04-23 20:44:34'::timestamp]::timestamp[] AS \"val!\"",
             list[datetime.datetime],
@@ -700,7 +714,9 @@ def test_query_fetch_one_sync_non_null_override(dbapi_conn):
 
     @fear.query
     def get_front(card_id: int) -> Query[Row]:
-        return Query('SELECT front AS "front!" FROM cards WHERE id = %s', Row, card_id)
+        return Query(
+            'SELECT front AS "front!" FROM cards WHERE id = %s', Row, card_id
+        )
 
     assert get_front(1).fetch_one_sync(dbapi_conn) == Row(front="bonjour")
 
@@ -714,7 +730,9 @@ def test_query_fetch_one_sync_nullable_override(dbapi_conn):
 
     @fear.query
     def get_front(card_id: int) -> Query[Row]:
-        return Query('SELECT front AS "front?" FROM cards WHERE id = %s', Row, card_id)
+        return Query(
+            'SELECT front AS "front?" FROM cards WHERE id = %s', Row, card_id
+        )
 
     assert get_front(1).fetch_one_sync(dbapi_conn) == Row(front="bonjour")
 
@@ -870,7 +888,9 @@ async def test_query_fetch_one_async_non_null_override(asyncpg_pool):
 
     @fear.query
     def get_front(card_id: int) -> Query[Row]:
-        return Query('SELECT front AS "front!" FROM cards WHERE id = $1', Row, card_id)
+        return Query(
+            'SELECT front AS "front!" FROM cards WHERE id = $1', Row, card_id
+        )
 
     assert await get_front(1).fetch_one(asyncpg_pool) == Row(front="bonjour")
 
@@ -885,7 +905,9 @@ async def test_query_fetch_one_async_nullable_override(asyncpg_pool):
 
     @fear.query
     def get_front(card_id: int) -> Query[Row]:
-        return Query('SELECT front AS "front?" FROM cards WHERE id = $1', Row, card_id)
+        return Query(
+            'SELECT front AS "front?" FROM cards WHERE id = $1', Row, card_id
+        )
 
     assert await get_front(1).fetch_one(asyncpg_pool) == Row(front="bonjour")
 
@@ -1108,7 +1130,9 @@ async def test_asyncpg_executor(asyncpg_pool):
     assert row.id == 1
 
     exe = Execute(
-        "INSERT INTO cards (front, back) VALUES ($1, $2)", "asyncpg_test", "bye"
+        "INSERT INTO cards (front, back) VALUES ($1, $2)",
+        "asyncpg_test",
+        "bye",
     )
     await exe.execute(asyncpg_pool)
     exe2 = Execute("DELETE FROM cards WHERE front = $1", "asyncpg_test")
@@ -1134,7 +1158,9 @@ async def test_psycopg_executor(psycopg_conn):
     assert row.id == 1
 
     exe = Execute(
-        "INSERT INTO cards (front, back) VALUES (%s, %s)", "psycopg_test", "bye"
+        "INSERT INTO cards (front, back) VALUES (%s, %s)",
+        "psycopg_test",
+        "bye",
     )
     await exe.execute(psycopg_conn)
     exe2 = Execute("DELETE FROM cards WHERE front = %s", "psycopg_test")
@@ -1437,7 +1463,9 @@ def test_parameterized_query_format_style(conn):
         (
             "SELECT TIMESTAMPTZ '2017-04-23 20:44:34+00' AS val",
             datetime.datetime,
-            datetime.datetime(2017, 4, 23, 20, 44, 34, tzinfo=datetime.timezone.utc),
+            datetime.datetime(
+                2017, 4, 23, 20, 44, 34, tzinfo=datetime.timezone.utc
+            ),
         ),
     ],
 )
@@ -1457,7 +1485,9 @@ def test_scalar_fetch_one_sync(dbapi_conn, sql, result_type, expected):
         (
             "SELECT TIMESTAMPTZ '2017-04-23 20:44:34+00' AS val",
             datetime.datetime,
-            datetime.datetime(2017, 4, 23, 20, 44, 34, tzinfo=datetime.timezone.utc),
+            datetime.datetime(
+                2017, 4, 23, 20, 44, 34, tzinfo=datetime.timezone.utc
+            ),
         ),
     ],
 )
@@ -1489,11 +1519,15 @@ def test_scalar_fetch_all_sync(dbapi_conn, sql, result_type, expected):
         (
             "SELECT TIMESTAMPTZ '2017-04-23 20:44:34+00' AS val",
             datetime.datetime,
-            datetime.datetime(2017, 4, 23, 20, 44, 34, tzinfo=datetime.timezone.utc),
+            datetime.datetime(
+                2017, 4, 23, 20, 44, 34, tzinfo=datetime.timezone.utc
+            ),
         ),
     ],
 )
-async def test_scalar_fetch_one_async(asyncpg_pool, sql, result_type, expected):
+async def test_scalar_fetch_one_async(
+    asyncpg_pool, sql, result_type, expected
+):
     assert await Query(sql, result_type).fetch_one(asyncpg_pool) == expected
 
 
@@ -1510,12 +1544,18 @@ async def test_scalar_fetch_one_async(asyncpg_pool, sql, result_type, expected):
         (
             "SELECT TIMESTAMPTZ '2017-04-23 20:44:34+00' AS val",
             datetime.datetime,
-            datetime.datetime(2017, 4, 23, 20, 44, 34, tzinfo=datetime.timezone.utc),
+            datetime.datetime(
+                2017, 4, 23, 20, 44, 34, tzinfo=datetime.timezone.utc
+            ),
         ),
     ],
 )
-async def test_scalar_fetch_optional_async(asyncpg_pool, sql, result_type, expected):
-    assert await Query(sql, result_type).fetch_optional(asyncpg_pool) == expected
+async def test_scalar_fetch_optional_async(
+    asyncpg_pool, sql, result_type, expected
+):
+    assert (
+        await Query(sql, result_type).fetch_optional(asyncpg_pool) == expected
+    )
 
 
 @pytest.mark.asyncio
@@ -1526,5 +1566,7 @@ async def test_scalar_fetch_optional_async(asyncpg_pool, sql, result_type, expec
         ("SELECT 'hello' AS val", str, ["hello"]),
     ],
 )
-async def test_scalar_fetch_all_async(asyncpg_pool, sql, result_type, expected):
+async def test_scalar_fetch_all_async(
+    asyncpg_pool, sql, result_type, expected
+):
     assert await Query(sql, result_type).fetch_all(asyncpg_pool) == expected

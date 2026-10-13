@@ -51,7 +51,9 @@ _DUMMY_VALUES: dict[type, object] = {
     bytes: b"",
     datetime.date: datetime.date(2000, 1, 1),
     datetime.time: datetime.time(),
-    datetime.datetime: datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
+    datetime.datetime: datetime.datetime(
+        2000, 1, 1, tzinfo=datetime.timezone.utc
+    ),
     datetime.timedelta: datetime.timedelta(),
     Decimal: Decimal(0),
     uuid.UUID: uuid.UUID(int=0),
@@ -96,7 +98,8 @@ class FearOfSQL:
         return fn
 
     def validate_all(
-        self, conn: pg8000.native.Connection | str,
+        self,
+        conn: pg8000.native.Connection | str,
     ) -> int:
         if isinstance(conn, str):
             native_conn = _connect_from_url(conn)
@@ -109,7 +112,9 @@ class FearOfSQL:
     def _validate(self, conn: pg8000.native.Connection) -> int:
         count = 0
         for fn in self._queries:
-            kwargs = {arg.param_name: arg.value for arg in _make_dummy_args(fn)}
+            kwargs = {
+                arg.param_name: arg.value for arg in _make_dummy_args(fn)
+            }
             query_obj = fn(**kwargs)
             sql_oneline = " ".join(str(query_obj.sql).split())
             result_type = (
@@ -141,7 +146,9 @@ def collect_errors(
 ) -> list[ValidationError]:
     sql_str = render(sql).sql if isinstance(sql, Template) else sql
     converted_sql, _ = pg8000.dbapi.convert_paramstyle("format", sql_str, ())
-    prepared_stmt, unresolved, origins, query_overrides = describe(conn, converted_sql)
+    prepared_stmt, unresolved, origins, query_overrides = describe(
+        conn, converted_sql
+    )
     if result_type is None:
         prepared_stmt.close()
         return []

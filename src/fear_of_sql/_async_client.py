@@ -23,15 +23,21 @@ class AsyncClient:
     ) -> None:
         self._executor = executor
 
-    async def fetch_one(self, sql: str, result_type: type[T], *args: object) -> T:
+    async def fetch_one(
+        self, sql: str, result_type: type[T], *args: object
+    ) -> T:
         return await Query(sql, result_type, *args).fetch_one(self._executor)
 
     async def fetch_optional(
         self, sql: str, result_type: type[T], *args: object
     ) -> T | None:
-        return await Query(sql, result_type, *args).fetch_optional(self._executor)
+        return await Query(sql, result_type, *args).fetch_optional(
+            self._executor
+        )
 
-    async def fetch_all(self, sql: str, result_type: type[T], *args: object) -> list[T]:
+    async def fetch_all(
+        self, sql: str, result_type: type[T], *args: object
+    ) -> list[T]:
         return await Query(sql, result_type, *args).fetch_all(self._executor)
 
     async def execute(self, sql: str, *args: object) -> None:
