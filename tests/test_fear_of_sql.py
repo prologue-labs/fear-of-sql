@@ -1157,6 +1157,35 @@ async def test_asyncpg_executor(asyncpg_pool):
     assert await exe2.execute_rows(asyncpg_pool) == 1
 
 
+def test_utility_commands_dbapi(dbapi_conn):
+    exe = Execute("CREATE TEMP TABLE t (front text, back text)")
+    assert exe.execute_rows_sync(dbapi_conn) == 0
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "SET TIME ZONE 'UTC'",
+        "CREATE TEMP TABLE t (x int)",
+    ],
+)
+@pytest.mark.asyncio
+async def test_utility_commands_asyncpg(asyncpg_pool, sql):
+    assert await Execute(sql).execute_rows(asyncpg_pool) == 0
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "SET TIME ZONE 'UTC'",
+        "CREATE TEMP TABLE t (x int)",
+    ],
+)
+@pytest.mark.asyncio
+async def test_utility_commands_psycopg(psycopg_conn, sql):
+    assert await Execute(sql).execute_rows(psycopg_conn) == 0
+
+
 @pytest.mark.asyncio
 async def test_psycopg_executor(psycopg_conn):
     fear = FearOfSQL()

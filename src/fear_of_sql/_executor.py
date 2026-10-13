@@ -32,4 +32,8 @@ class AsyncpgExecutor:
 
     async def execute(self, sql: str, args: tuple[object, ...]) -> int:
         result = await self._executor.execute(sql, *args)
-        return int(result.split()[-1])
+        match result.split():
+            case [*_, last] if last.isdecimal():
+                return int(last)
+            case _:
+                return 0

@@ -27,4 +27,4 @@ class PsycopgExecutor:
 
     async def execute(self, sql: str, args: tuple[object, ...]) -> int:
         cursor = await self._executor.execute(sql, args or None)  # pyright: ignore[reportArgumentType]
-        return cursor.rowcount
+        return 0 if cursor.rowcount == -1 else cursor.rowcount

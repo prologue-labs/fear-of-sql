@@ -239,4 +239,5 @@ class Execute(BaseQuery):
 
     def execute_rows_sync(self, conn: DBAPIConnection) -> int:
         cursor = _execute_sync(conn, str(self.sql), self.args)
-        return int(cursor.rowcount)
+        row_count = int(cursor.rowcount)
+        return 0 if row_count == -1 else row_count
