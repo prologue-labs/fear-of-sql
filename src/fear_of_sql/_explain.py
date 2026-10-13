@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
@@ -7,6 +8,8 @@ from typing import Any
 import pg8000.native  # noqa: TC002
 
 from ._describe import NullabilityOverride, UnresolvedColumn
+
+_MIN_PG_VERSION_PLAN_CACHE_MODE_SUPPORT = 12
 
 
 class JoinType(str, Enum):
@@ -74,6 +77,15 @@ def _visit_plan(
             _visit_plan(child, root_outputs, nullables)
 
 
+def _pg_supports_plan_cache_mode(conn: pg8000.native.Connection) -> bool:
+    version_raw = conn.parameter_statuses["server_version"]
+    digits = "".join(itertools.takewhile(str.isdigit, version_raw))
+    return (
+        len(digits) > 0
+        and int(digits) >= _MIN_PG_VERSION_PLAN_CACHE_MODE_SUPPORT
+    )
+
+
 def collect_explain_nullability(
     conn: pg8000.native.Connection,
     prepared_statement: pg8000.native.PreparedStatement,
@@ -96,6 +108,8 @@ def collect_explain_nullability(
     nulls = ", ".join(["NULL"] * param_count)
     params_clause = f"({nulls})" if nulls else ""
 
+    if _pg_supports_plan_cache_mode(conn):
+        conn.run("SET plan_cache_mode = force_generic_plan")
     result = conn.run(
         f"EXPLAIN (VERBOSE, FORMAT JSON) EXECUTE {stmt}{params_clause}"
     )

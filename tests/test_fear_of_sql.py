@@ -354,6 +354,23 @@ def test_left_join_subquery_nullable(conn):
     assert errors[0].column == "score"
 
 
+def test_join_with_param(conn):
+    @dataclass
+    class CardReview:
+        front: str
+        score: int
+
+    errors = collect_errors(
+        conn,
+        "SELECT cards.front, reviews.score FROM cards"
+        " LEFT JOIN reviews ON cards.id = reviews.card_id WHERE cards.id = $1",
+        CardReview,
+    )
+    assert len(errors) == 1
+    assert isinstance(errors[0], NullabilityError)
+    assert errors[0].column == "score"
+
+
 def test_correlated_subquery(conn):
     @dataclass
     class CardWithMax:
